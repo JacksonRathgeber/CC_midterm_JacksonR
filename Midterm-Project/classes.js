@@ -2,8 +2,21 @@ class Core {
 
 	constructor(r_, g_, b_){
 		this.pos=createVector(width/2,height/2);
-		this.color=color(r_,g_,b_);
+		this.vel=createVector(2,0);
+		this.accel=createVector(1/15,0);
+		this.r=r_;
+		this.g=g_;
+		this.b=b_;
+		this.color=color(this.r,this.g,this.b);
 		this.size=80;
+		this.hueTime=0;
+		this.initSize=this.size;
+		this.finSize=this.size*1.25;
+		this.inc=0.25;
+		this.finTime=0;
+		this.exploSize=this.size;
+		this.exploSpeed=200;
+		this.exploOpac=255;
 	}
 
 	display(){ //create image of core
@@ -11,8 +24,40 @@ class Core {
 		ellipse(this.pos.x,this.pos.y,this.size,this.size);
 	}
 
-	changeHue(xr,xg,xb){ //change color
+	resetHueFunc(){
+		this.hueTime=0;
+	}
+
+	changeHue(xr,xg,xb, dur){ //change color
+
+		if (frameCount%2==0 && this.hueTime<1){
+			this.hueTime+=1/(dur*15);
+		}
+		this.color=lerpColor(this.color,color(xr,xg,xb),this.hueTime);
+		if (this.hueTime>=1){
+			this.hueTime=0;
+		}
+		//console.log(str(this.color));
+		//console.log(this.hueTime);
+		/*
+		if(xr>this.r){
+			this.r++;
+		}
+		else if (this.r>xr){
+			this.r--;
+		}
+		if(xg>this.g){
+			this.g++;
+		}
+		else if (this.g>xg){
+			this.g--;
+		}
+		else if (this.b>xb){
+			this.b--;
+		}
+		
 		this.color=color(xr,xg,xb);
+		*/
 	}
 
 	vibrate(intensity){ // vibrate w random movements
@@ -25,11 +70,51 @@ class Core {
 		this.pos.y=height/2;
 	}
 
-	changeSize(newSize){ //augment size
-		this.size=newSize;
+	changeSize(newSize, speed){ //augment size
+		if(this.size>newSize){
+			this.size-=speed;
+		}
+		if(this.size<newSize){
+			this.size+=speed;
+		}
 	}
 
+	breathe(){
+
+		if (this.size>=this.finSize){
+			this.sizeFlag==false;
+			this.inc=-0.25;
+			console.log("shrinking");
+		}
+		else if (this.size<=this.initSize){
+			this.sizeFlag==true;
+			this.inc=0.25;
+			console.log("growing");
+		}
+
+		this.size+=this.inc;
+
+		//console.log("this.size: "+this.size+", finSize: "+this.finSize+", sizeFlag: "+this.sizeFlag);
+
+	}
+
+
+	explode(timer){
+		this.finTime+=1/60;
+		if(this.finTime>=timer){
+			strokeWeight(20);
+			stroke(this.color, this.exploOpac)
+			ellipse(width/2,height/2,this.exploSize,this.exploSize);
+			this.exploSize+=this.exploSpeed;
+			this.exploSpeed-=2;
+			this.exploOpac-=2;
+		}
+	}
+
+
 }
+
+
 
 
 
@@ -73,24 +158,30 @@ class Projectile{
 	}
 }
 
+
+
+
+
+
 class BackgroundLine{
 	constructor(x_){
 		this.x=x_;
 		this.toppos=createVector(this.x,0);
 		this.bottompos=createVector(this.x,height);
-		this.topvel=createVector(random(-40,40),random(80,-5));
-    	this.bottomvel=createVector(random(-40,40),random(80,-5));
-		this.grav=createVector(0,3);
+		this.topvel=createVector(random(-6,6),random(15,-5));
+    	this.bottomvel=createVector(random(-6,6),random(15,-5));
+		this.grav=createVector(0,1);
 		this.finTime=0;
 		this.frames=0;
 	}
 
 	display(timer){
+		strokeWeight(2);
 		let opac=map(this.frames,0,timer*60,0,120);
 		if(this.finTime<=timer){
 			stroke(random(100,255),0,0,opac);
 			line(this.toppos.x,this.toppos.y,this.bottompos.x,this.bottompos.y);
-			console.log("opac: "+opac);
+			//console.log("opac: "+opac);
 		}
 		else{
 			line(this.toppos.x,this.toppos.y,this.bottompos.x,this.bottompos.y);

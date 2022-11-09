@@ -4,10 +4,11 @@ let projs=[];
 let lines=[];
 let coreColor;
 let finishFlag=false;
+let vibr=10;
 
 function setup() {
   createCanvas(800,800);
-  
+
   coreColor=color(160,210,250);
   core=new Core(coreColor); // core = "main character"
   
@@ -21,7 +22,7 @@ function setup() {
     //console.log(i+" location: "+projs[i].pos.x);
   }
 
-  for (let i=0;i<=width;i++){
+  for (let i=0;i<=width;i+=2){
     lines[i]=new BackgroundLine(i);
     //set up crazy background, create objects for each line
   }
@@ -33,9 +34,11 @@ function draw() {
   core.display(); //show core
 
   if(sec==0){
-    core.changeHue(160,210,250);
+    core.resetHueFunc();
+    core.changeHue(160,210,250,1);
     finishFlag=false;
     core.vibrate(0);
+    core.changeSize(80,0.25);
 
     projs=[];
     lines=[];
@@ -51,19 +54,21 @@ function draw() {
     }
     for (let i=0;i<=width;i++){
       lines[i]=new BackgroundLine(i);
-      lines[i].topvel=createVector(random(-40,40),random(40,-5));
-      lines[i].bottomvel=createVector(random(-40,40),random(40,-5));
+      lines[i].topvel=createVector(random(-6,6),random(15,-5));
+      lines[i].bottomvel=createVector(random(-6,6),random(15,-5));
     }
     //reset sketch after certain time elapsed, create loop
   }
 
-  if (frameCount%60==0){
-  	sec++;
+  if (frameCount%30==0){
+  	sec+=0.5;
     console.log(sec);
   }
   
-  if (sec==34){
-    sec=0;
+  if (sec>42){
+    sec=-1;
+    vibr=10;
+
   }
   //looping counter
 
@@ -72,8 +77,12 @@ function draw() {
     projs[0].fire();
     if (projs[0].intersect(core)){
       projs[0].destroy();
-      core.changeHue(190,170,200);
+      core.changeHue(190,170,200,3);
+      screenShake(5);
     }
+  }
+  if(sec==12){
+    core.resetHueFunc(); 
   }
   //launch first projectile, disappear on collision with core
 
@@ -82,8 +91,11 @@ function draw() {
     projs[1].fire();
     if (projs[1].intersect(core)){
       projs[1].destroy();
-      core.changeHue(210,150,190);
+      core.changeHue(210,150,190,5);
     }
+  }
+  if(sec==20){
+    core.resetHueFunc(); 
   }
   //launch second projectile, functionally identical to first
 
@@ -99,22 +111,26 @@ function draw() {
     projs[2].retreat();
   }
   if (sec==25){
-    core.changeHue(240,120,150);
-    core.pos.sub(1,0);
-    core.changeSize(100);
+    core.pos.sub(core.vel);
+    core.vel.sub(core.accel);
+    core.changeSize(120,1);
+  }
+  if (sec>=24 && sec<=27){
+    core.changeHue(230,120,150,5);
   }
 
-  if (sec==26){
-    core.changeHue(210,150,190);
-    core.recenter();
-    core.changeSize(80);
+  if (sec==25.5){
+    core.pos.add(core.vel);
+    core.vel.add(core.accel);
+    core.changeSize(80,1);
+  }
+
+  if (sec>=26 && sec<29){
     core.vibrate(2);
   }
-
-  if (sec>=27 && sec<29){
-    core.vibrate(2);
+  if (sec==29){
+    core.resetHueFunc();
   }
-
   if (sec>=29){
     core.vibrate(2);
 
@@ -136,8 +152,9 @@ function draw() {
   //third projectile returns with rapid-fire, triggers end sequence
   
   if (finishFlag==true){
-    core.changeHue(255,0,0);
     core.vibrate(10);
+    core.changeHue(255,0,0,30);
+    core.explode(2.8);
 
     for (let i=0;i<=width;i++){
       lines[i].count();
@@ -145,5 +162,27 @@ function draw() {
       lines[i].collapse(3);
     }
   }
+  if (sec==34){
+    core.resetHueFunc();
+  }
   //background lines appear, fall off, core vibrates violently and turns completely red
+
+  if (sec>34 && sec<=42){
+    finishFlag=false;
+    core.vibrate(vibr);
+    if(vibr>0){
+      vibr-=1/30;
+    }
+    core.changeHue(160,210,250,750);
+    core.breathe();
+    //console.log(vibr);
+  }
+
+
+}
+
+function screenShake(strength){
+  push();
+  translate(random(-1*strength,strength), random(-1*strength,strength));
+  pop();
 }
